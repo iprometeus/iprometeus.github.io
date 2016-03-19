@@ -6,9 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pokedex</title>
 
-    <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">    
-    <!-- Default -->
+    <link href="css/bootstrap-multiselect.css" rel="stylesheet"/>
     <link href="css/pokedex.css" rel="stylesheet">
 
     <!--[if lt IE 9]>
@@ -25,17 +24,29 @@
   	<div class="container">
   		<div class="row">
         <div id="pokemonListContainer" class="col-xs-6 col-sm-6 col-md-7">
-        </div>
-        <div class="col-xs-6 col-sm-6 col-md-5">
-          <div id="pokemonDetailsContainer">
+          <div id="pokemonTypeFilterWrapper">
+            <select id="pokemonTypeFilter" multiple="multiple">
+            </select>
+            <button id="btnFilter" type="button" class="btn btn-primary">Filter by type</button>
           </div>
+
+          <div id="pokemonListProgress">
+            <div class="progress">
+              <div class="progress-bar progress-bar-striped active" role="progressbar" style="width:100%">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="pokemonDetailsContainer" class="col-xs-6 col-sm-6 col-md-5">
         </div>
   		</div>
   	</div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap-multiselect.js"></script>
     <script src="js/rcolor.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/pokedex.js"></script>
   </body>
 </html>

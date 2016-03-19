@@ -1,4 +1,6 @@
 var BASE_API_URL = "http://pokeapi.co/";
+var typesColorsList;
+var nextUrlDataLoading;
 
 $(function() {
 
@@ -8,16 +10,20 @@ $(function() {
 
 function loadData() {
 
+	$("#pokemonListProgress").show();
 	var typesColors = $.Deferred();
+
 	$.when(typesColors).done(function(tc) {
 	    loadPokemonList(tc);
+    	$('#pokemonTypeFilter').multiselect();
 	});
 	loadTypeList(typesColors);
 }
 
 function loadTypeList(typesColors) {
 
-	typesColorsTmp = {};
+	var typesColorsTmp = {};
+	var itemsTypes = [];  
 	$.getJSON(BASE_API_URL + "api/v1/type/?limit=999", function(data) {
 
 		var next;
@@ -34,21 +40,34 @@ function loadTypeList(typesColors) {
 			var rcolor = new RColor;
 		    $.each(objects, function(key, val) {
 		        typesColorsTmp[val.name.toUpperCase()] = rcolor.get(true,0.3,0.99);
+	    		if($("#pokemonTypeFilter option[value='" + val.name + "']").length < 1) {
+	    			itemsTypes.push("<option value=" + val.name + ">" + val.name + "</option>");
+	    		}
 		    });
 		}
+
+	    $("#pokemonTypeFilter").append(itemsTypes.join(""));
+	    if($("#pokemonTypeFilterWrapper").css("display") == "none") {
+	    	$("#pokemonTypeFilterWrapper").show();
+	    }
+
+		typesColorsList = typesColorsTmp;
 		typesColors.resolve(typesColorsTmp);
 	})
 	.error(function() {
 	 	alert("Failed to load types.");
-	 });
+	});
 
 }
 
 function loadPokemonList(typesColors) {
 
-	$.getJSON(BASE_API_URL + "api/v1/pokemon/?limit=12", function(data) {
+	var url = BASE_API_URL + (jQuery.isEmptyObject(nextUrlDataLoading) ? "api/v1/pokemon/?limit=12" : nextUrlDataLoading);
 
-	        var items = [];
+	$.getJSON(url, function(data) {
+
+			nextUrlDataLoading = data.meta.next;
+	        var items = [];     
 
 	    	if(jQuery.isEmptyObject(data)) {
 	    		items.push("<strong>There is no pokemons.</strong>");
@@ -65,16 +84,20 @@ function loadPokemonList(typesColors) {
 
 	    			imgUrl = BASE_API_URL + "media/img/" + val.national_id + ".png";
 	    			pokemonTypes = [];
-	    						        
-	    			$.each(val.types, function(key, val) {
-	    				pokemonTypes.push("<span class='label pokemonTypeLabel' style='background-color:" + typesColors[val.name.toUpperCase()] + "'>" + val.name + "</span>");
-	    			});
+	    						
+	    			if(!jQuery.isEmptyObject(typesColors)) { 
+	    				$.each(val.types, function(key, val) {
+	    					pokemonTypes.push("<span class='label pokemonTypeLabel' style='background-color:" + typesColors[val.name.toUpperCase()] + "'>" + val.name + "</span>");
+	    				});
+	    			}
 	    			strHtml.push("<div class='col-md-4'>" +
-	    							"<div class='pokemonListItem' id='" + val.national_id + "'>" +
-	    								"<div class='pokemonIconContainer'><img class='pokemonIcon' src='" + imgUrl + "'/></div>" + 
-	    								"<div class='pokemonName'>" + val.name + "</div>" +
-	    								"<div class='pokemonTypeSection'>" + pokemonTypes.join("") + "</div>" +
-	    							"</div>" +
+		    						"<div class='pokemonListItem panel panel-default' id='" + val.national_id + "'>" +
+   			 							"<div class='panel-body'>" +
+		    								"<div class='pokemonIconContainer'><img class='pokemonIcon' src='" + imgUrl + "'/></div>" + 
+		    								"<div class='pokemonName'>" + val.name + "</div>" +
+		    								"<div class='pokemonTypeSection'>" + pokemonTypes.join("") + "</div>" +
+		    							"</div>" +
+		    						"</div>" +
 	    						"</div>");
 
 	    			if((counter % 3) == 2) {
@@ -84,12 +107,14 @@ function loadPokemonList(typesColors) {
 				    strHtml = [];
 				    ++counter;
 				});
-	    		items.push("<button type='button' class='btn btn-primary btnLoadMore'>Load More</button>");
+				$("#btnLoadMore").remove();
+	    		items.push("<button id='btnLoadMore' type='button' class='btn btn-primary'>Load More</button>");
 	    	}
 	    	else {
 	    		items.push("<strong>There is no pokemons.</strong>");
 	    	}
 
+		$("#pokemonListProgress").hide();
 	    $("#pokemonListContainer").append(items.join(""));
 
 	    addListeners();
@@ -104,6 +129,11 @@ function addListeners() {
 	$(".pokemonListItem").click(function() {
  		$("#pokemonDetailsContainer").empty();
 		loadPokemonDetails($(this).attr('id'));
+	});
+
+	$("#btnLoadMore").click(function() {
+		$("#pokemonListProgress").show();
+	    loadPokemonList(typesColorsList);
 	});
 }
 
@@ -130,13 +160,54 @@ function loadPokemonDetails(id) {
 
     	if(!jQuery.isEmptyObject(data.types)) {
 			$.each(data.types, function(key, val) {
-				pokemonTypes.push(val.name);
+				pokemonTypes.push(val.name.capitalizeFirstLetter());
 			});
 		}
-   		items.push("<div class=''>" +
-   						"<div class='pokemonIconContainer'><img class='pokemonIcon' src='" + imgUrl + "'/></div>" + 
-   						"<div class='pokemonName'>" + data.name + "</div>" +
-   						"<div class='pokemonCharacteristics'>" + pokemonTypes.join() + "</div>" +
+   		items.push("<div id='pokemonDetailsWrapper' class='panel panel-default'>" +
+   			 			"<div class='panel-body'>" +
+	   						"<div class='pokemonIconDetailsContainer'><img class='pokemonIcon' src='" + imgUrl + "'/></div>" + 
+	   						"<div class='pokemonNameDetails'>" + data.name + "</div>" +
+	   						"<table class='table table-bordered'>" +
+							  "<tbody>" +
+							    "<tr>" +
+							      "<th scope='row'>Type</th>" +
+							      "<td>" + pokemonTypes.join() + "</td>" +
+							    "</tr>" +
+							    "<tr>" +
+							      "<th scope='row'>Attack</th>" +
+							      "<td>" + data.attack + "</td>" +
+							    "</tr>" +
+							    "<tr>" +
+							      "<th scope='row'>Defense</th>" +
+							      "<td>" + data.defense + "</td>" +
+							    "</tr>" +
+							    "<tr>" +
+							      "<th scope='row'>HP</th>" +
+							      "<td>" + data.hp + "</td>" +
+							    "</tr>" +
+							    "<tr>" +
+							      "<th scope='row'>SP Attack</th>" +
+							      "<td>" + data.sp_atk + "</td>" +
+							    "</tr>" +
+							    "<tr>" +
+							      "<th scope='row'>SP Defense</th>" +
+							      "<td>" + data.sp_def + "</td>" +
+							    "</tr>" +
+							    "<tr>" +
+							      "<th scope='row'>Speed</th>" +
+							      "<td>" + data.speed + "</td>" +
+							    "</tr>" +
+							    "<tr>" +
+							      "<th scope='row'>Weight</th>" +
+							      "<td>" + data.weight + "</td>" +
+							    "</tr>" +
+							    "<tr>" +
+							      "<th scope='row'>Total Moves</th>" +
+							      "<td>" + data.moves.length + "</td>" +
+							    "</tr>" +
+							  "</tbody>" +
+							"</table>" +
+	   					"</div>" +
    					"</div>");
 		
 	    $("#pokemonDetailsContainer").append(items.join(""));

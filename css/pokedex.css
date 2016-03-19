@@ -1,20 +1,18 @@
-
-#pokemonDetailsContainer {
-	position: fixed;
+html, body {
+    height: 100%;
 }
 
 .pokemonListItem {
-	height: 250px;
-	max-width: 228px;
-	border: 1px solid black;
-	margin-bottom: 15px;
-	margin-top: 15px;
+	height: 230px;
 	text-align: center;
-	padding: 10px;
 }
 
-.pokemonIconContainer {
-	height: 60%;
+.pokemonIconContainer {	
+    height: 120px;
+}
+
+.pokemonIconDetailsContainer {
+	height: 150px;
 }
 
 .pokemonIcon {
@@ -25,8 +23,12 @@
 	transform: translateY(-50%);
 }
 
-.pokemonName {
+.pokemonName, .pokemonNameDetails {
 	font-weight: bold;
+}
+
+.pokemonNameDetails {
+	font-size: 20px;
 }
 
 .pokemonTypeSection {
@@ -43,13 +45,40 @@
 	font-size: 100%;
 }
 
-.btnLoadMore {
+#btnLoadMore {
 	width: 100%;
 	font-weight: bold;
 	font-size: 20px;
 	margin: 15px 0px;
 }
 
-.pokemonCharacteristics {
-	
+#btnFilter {
+	font-weight: bold;
+}
+
+#pokemonDetailsWrapper {
+	text-align: center;
+	position: fixed; 
+	width: 300px;
+    margin-top: -205px;
+    top: 50%;
+}
+
+div#pokemonDetailsContainer .table {
+	margin-bottom: 0;
+}
+
+div#pokemonDetailsContainer th, td {
+	text-align: center;
+}
+
+#pokemonListProgress {
+	display: none;
+	width:50%;
+	margin: auto;
+}
+
+#pokemonTypeFilterWrapper {
+	display: none;
+	padding: 10px 10px 10px 0;
 }
