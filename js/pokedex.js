@@ -11,22 +11,27 @@ $(function() {
 function loadData() {
 
 	$("#pokemonListProgress").show();
-	var typesColors = $.Deferred();
 
-	$.when(typesColors).done(function(tc) {
-	    loadPokemonList(tc);
-    	$('#pokemonTypeFilter').multiselect();
-	});
-	loadTypeList(typesColors);
+
+	if(typeof(Storage) !== "undefined" && localStorage.getItem('typesColors')) {
+		typesColorsList = JSON.parse(localStorage.getItem('typesColors'));
+		loadPokemonList(typesColorsList);
+	}
+	else {
+		var typesColors = $.Deferred();
+
+		$.when(typesColors).done(function(tc) {
+		    loadPokemonList(tc);
+		});
+		loadTypeList(typesColors);
+	}
 }
 
 function loadTypeList(typesColors) {
 
 	var typesColorsTmp = {};
-	var itemsTypes = [];  
 	$.getJSON(BASE_API_URL + "api/v1/type/?limit=999", function(data) {
 
-		var next;
 	    var objects;
 	    if(!jQuery.isEmptyObject(data)) {
 		    $.each(data, function(key, val) {
@@ -40,18 +45,15 @@ function loadTypeList(typesColors) {
 			var rcolor = new RColor;
 		    $.each(objects, function(key, val) {
 		        typesColorsTmp[val.name.toUpperCase()] = rcolor.get(true,0.3,0.99);
-	    		if($("#pokemonTypeFilter option[value='" + val.name + "']").length < 1) {
-	    			itemsTypes.push("<option value=" + val.name + ">" + val.name + "</option>");
-	    		}
 		    });
 		}
 
-	    $("#pokemonTypeFilter").append(itemsTypes.join(""));
-	    if($("#pokemonTypeFilterWrapper").css("display") == "none") {
-	    	$("#pokemonTypeFilterWrapper").show();
-	    }
-
-		typesColorsList = typesColorsTmp;
+		if(typeof(Storage) !== "undefined") {
+    		localStorage.setItem('typesColors', JSON.stringify(typesColorsTmp));
+		}
+		else {
+			typesColorsList = typesColorsTmp;
+		}
 		typesColors.resolve(typesColorsTmp);
 	})
 	.error(function() {
@@ -67,7 +69,8 @@ function loadPokemonList(typesColors) {
 	$.getJSON(url, function(data) {
 
 			nextUrlDataLoading = data.meta.next;
-	        var items = [];     
+	        var items = []; 
+			var itemsTypes = [];      
 
 	    	if(jQuery.isEmptyObject(data)) {
 	    		items.push("<strong>There is no pokemons.</strong>");
@@ -88,6 +91,10 @@ function loadPokemonList(typesColors) {
 	    			if(!jQuery.isEmptyObject(typesColors)) { 
 	    				$.each(val.types, function(key, val) {
 	    					pokemonTypes.push("<span class='label pokemonTypeLabel' style='background-color:" + typesColors[val.name.toUpperCase()] + "'>" + val.name + "</span>");
+	    					var optionSelectStr = "<option value=" + val.name + ">" + val.name + "</option>";
+				    		if($("#pokemonTypeFilter option[value='" + val.name + "']").length < 1 && $.inArray(optionSelectStr, itemsTypes) == -1) {
+				    			itemsTypes.push(optionSelectStr);
+				    		}
 	    				});
 	    			}
 	    			strHtml.push("<div class='col-md-4'>" +
@@ -115,6 +122,13 @@ function loadPokemonList(typesColors) {
 	    	}
 
 		$("#pokemonListProgress").hide();
+
+	    $("#pokemonTypeFilter").append(itemsTypes.join(""));
+	    if($("#pokemonTypeFilterWrapper").css("display") == "none") {
+	    	$("#pokemonTypeFilterWrapper").show();
+	    }
+    	$('#pokemonTypeFilter').multiselect('rebuild');
+
 	    $("#pokemonListContainer").append(items.join(""));
 
 	    addListeners();
@@ -132,8 +146,14 @@ function addListeners() {
 	});
 
 	$("#btnLoadMore").click(function() {
+		 $("#pokemonListProgress").insertBefore("#btnLoadMore");
 		$("#pokemonListProgress").show();
 	    loadPokemonList(typesColorsList);
+	});
+
+	$("#btnFilter").click(function() {
+		$("#pokemonListProgress").show();
+	    filterPokemonListByType();
 	});
 }
 
@@ -215,4 +235,11 @@ function loadPokemonDetails(id) {
 	.error(function() { 
 		alert("Failed to load pokemon details."); 
 	});
+}
+
+
+function filterPokemonListByType() {
+
+	var selectedTypes = $("#pokemonTypeFilter").val()
+	console.log("selectedTypes=" + selectedTypes);
 }
