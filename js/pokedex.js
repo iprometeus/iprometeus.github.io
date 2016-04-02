@@ -1,5 +1,6 @@
 var BASE_API_URL = "http://pokeapi.co/";
-var typesColorsList;
+var pokemonItemHtmlList = [];
+var typesColorsList = [];
 var nextUrlDataLoading;
 
 $(function() {
@@ -11,17 +12,18 @@ $(function() {
 function loadData() {
 
 	$("#pokemonListProgress").show();
+	var selectedTypes = JSON.stringify($("#pokemonTypeFilter").val());
 
 
 	if(typeof(Storage) !== "undefined" && localStorage.getItem('typesColors')) {
 		typesColorsList = JSON.parse(localStorage.getItem('typesColors'));
-		loadPokemonList(typesColorsList);
+		loadPokemonList(typesColorsList, selectedTypes);
 	}
 	else {
 		var typesColors = $.Deferred();
 
 		$.when(typesColors).done(function(tc) {
-		    loadPokemonList(tc);
+		    loadPokemonList(tc, selectedTypes);
 		});
 		loadTypeList(typesColors);
 	}
@@ -57,37 +59,30 @@ function loadTypeList(typesColors) {
 		typesColors.resolve(typesColorsTmp);
 	})
 	.error(function() {
-	 	alert("Failed to load types.");
+	 	alert("Failed to load types.\nPlease try again.");
 	});
 
 }
 
-function loadPokemonList(typesColors) {
+function loadPokemonList(typesColors, typesFilterList) {
 
 	var url = BASE_API_URL + (jQuery.isEmptyObject(nextUrlDataLoading) ? "api/v1/pokemon/?limit=12" : nextUrlDataLoading);
 
 	$.getJSON(url, function(data) {
 
 			nextUrlDataLoading = data.meta.next;
-	        var items = []; 
 			var itemsTypes = [];      
 
-	    	if(jQuery.isEmptyObject(data)) {
-	    		items.push("<strong>There is no pokemons.</strong>");
+	    	if(jQuery.isEmptyObject(data) || jQuery.isEmptyObject(data.objects)) {
+	    		$("#pokemonListContainer").append("<strong>There are no more pokemons.</strong>");
 	    	}
-	       
-	    	if(!jQuery.isEmptyObject(data.objects)) {
-	    		var strHtml = [];
-	    		var counter = 0;
+	        else {
 
 	    		$.each(data.objects, function(key, val) {
-	    			if((counter % 3) == 0) {
-	    				strHtml.push("<div class='row'>")
-	    			}
 
-	    			imgUrl = BASE_API_URL + "media/img/" + val.national_id + ".png";
-	    			pokemonTypes = [];
-	    						
+	    			var imgUrl = BASE_API_URL + "media/img/" + val.national_id + ".png";
+	    			var pokemonTypes = [];
+
 	    			if(!jQuery.isEmptyObject(typesColors)) { 
 	    				$.each(val.types, function(key, val) {
 	    					pokemonTypes.push("<span class='label pokemonTypeLabel' style='background-color:" + typesColors[val.name.toUpperCase()] + "'>" + val.name + "</span>");
@@ -97,45 +92,95 @@ function loadPokemonList(typesColors) {
 				    		}
 	    				});
 	    			}
-	    			strHtml.push("<div class='col-md-4'>" +
-		    						"<div class='pokemonListItem panel panel-default' id='" + val.national_id + "'>" +
-   			 							"<div class='panel-body'>" +
-		    								"<div class='pokemonIconContainer'><img class='pokemonIcon' src='" + imgUrl + "'/></div>" + 
-		    								"<div class='pokemonName'>" + val.name + "</div>" +
-		    								"<div class='pokemonTypeSection'>" + pokemonTypes.join("") + "</div>" +
-		    							"</div>" +
-		    						"</div>" +
-	    						"</div>");
 
-	    			if((counter % 3) == 2) {
-	    				strHtml.push("</div>")
-	    			}
-				    items.push(strHtml.join(""));
-				    strHtml = [];
-				    ++counter;
+	    			pokemonItemHtmlList.push("<div class='col-md-4'>" +
+					    						"<div class='pokemonListItem panel panel-default' id='" + val.national_id + "'>" +
+			   			 							"<div class='panel-body'>" +
+					    								"<div class='pokemonIconContainer'><img class='pokemonIcon' src='" + imgUrl + "'/></div>" + 
+					    								"<div class='pokemonName'>" + val.name + "</div>" +
+					    								"<div class='pokemonTypeSection'>" + pokemonTypes.join("") + "</div>" +
+					    							"</div>" +
+					    						"</div>" +
+				    						"</div>");
 				});
-				$("#btnLoadMore").remove();
-	    		items.push("<button id='btnLoadMore' type='button' class='btn btn-primary'>Load More</button>");
-	    	}
-	    	else {
-	    		items.push("<strong>There is no pokemons.</strong>");
+
+				filterShowPokemonList(typesFilterList);
 	    	}
 
-		$("#pokemonListProgress").hide();
-
-	    $("#pokemonTypeFilter").append(itemsTypes.join(""));
-	    if($("#pokemonTypeFilterWrapper").css("display") == "none") {
-	    	$("#pokemonTypeFilterWrapper").show();
-	    }
-    	$('#pokemonTypeFilter').multiselect('rebuild');
-
-	    $("#pokemonListContainer").append(items.join(""));
-
-	    addListeners();
+		    $("#pokemonTypeFilter").append(itemsTypes.join(""));
+		    if($("#pokemonTypeFilterWrapper").css("display") == "none") {
+		    	$("#pokemonTypeFilterWrapper").show();
+		    }
+	    	$('#pokemonTypeFilter').multiselect('rebuild');
 	})
 	.error(function() { 
-		alert("Failed to load pokemons list."); 
+		alert("Failed to load pokemons list.\nPlease try again."); 
+		$("#pokemonListProgress").hide();
 	});
+}
+
+function filterPokemonListByType() {
+
+	var selectedTypes = $("#pokemonTypeFilter").val();
+
+ 	$("#pokemonListContainer").empty();
+	filterShowPokemonList(selectedTypes);
+}
+
+function filterShowPokemonList(typesFilterList) {
+
+	if(!jQuery.isEmptyObject(pokemonItemHtmlList)) {
+		var startIndex = 0;
+		var POKEMON_PORTION_QUANTITY = 12;
+		var counter = 0;
+		var items = [];
+
+		var lstIndex = nextUrlDataLoading.lastIndexOf("=");
+		var indexShift = nextUrlDataLoading.substring(lstIndex + 1) - POKEMON_PORTION_QUANTITY;
+		if($('#btnFilter').is(':disabled') && pokemonItemHtmlList.length >= indexShift) {
+			startIndex = indexShift;
+		}
+
+		for	(i = startIndex; i < pokemonItemHtmlList.length; i++) {
+
+			var isInFilterTypes = false;
+			var currTypeElement = ($(pokemonItemHtmlList[i]).find(".pokemonTypeLabel"));
+
+			if(!jQuery.isEmptyObject(currTypeElement)) {
+				$.each(currTypeElement, function() {
+					if(typesFilterList == null || typesFilterList == "null" || $.inArray($(this).text(), jQuery.makeArray(typesFilterList)) != -1) {
+						isInFilterTypes = true;
+					}
+				});
+			}
+
+		    if(isInFilterTypes == false) {
+		    	continue;
+		    }
+
+			if((counter % 3) == 0) {
+				items.push("<div class='row'>");
+			}
+
+		    items.push(pokemonItemHtmlList[i]);
+
+		    if((counter % 3) == 2) {
+		    	items.push("</div>");
+		    }
+			++counter;
+		}
+
+		$("#btnLoadMore").remove();
+		items.push("<button id='btnLoadMore' type='button' class='btn btn-primary'>Load More</button>");
+
+	    $("#pokemonListContainer").append(items.join(""));
+	    addListeners();
+	}
+
+	if(!$('#btnFilter').is(':disabled')) {
+    	$("#btnFilter").prop('disabled', true);
+	}
+	$("#pokemonListProgress").hide();
 }
 
 function addListeners() {
@@ -146,15 +191,20 @@ function addListeners() {
 	});
 
 	$("#btnLoadMore").click(function() {
-		 $("#pokemonListProgress").insertBefore("#btnLoadMore");
+		$("#pokemonListProgress").insertBefore("#btnLoadMore");
 		$("#pokemonListProgress").show();
-	    loadPokemonList(typesColorsList);
+		var selectedTypes = JSON.stringify($("#pokemonTypeFilter").val());
+	    loadPokemonList(typesColorsList, selectedTypes);
 	});
 
 	$("#btnFilter").click(function() {
 		$("#pokemonListProgress").show();
 	    filterPokemonListByType();
 	});
+
+	$("#pokemonTypeFilter").on("change", function() {
+    	$("#btnFilter").prop('disabled', false);
+	})
 }
 
 function loadPokemonDetails(id) {
@@ -164,7 +214,7 @@ function loadPokemonDetails(id) {
 	    var items = [];
 
     	if(jQuery.isEmptyObject(data)) {
-    		items.push("<strong>There is no pokemons.</strong>");
+    		items.push("<strong>There are no details for this pokemon.</strong>");
     	}
 
     	imgUrl = BASE_API_URL + "media/img/" + id + ".png";
@@ -233,13 +283,6 @@ function loadPokemonDetails(id) {
 	    $("#pokemonDetailsContainer").append(items.join(""));
 	})
 	.error(function() { 
-		alert("Failed to load pokemon details."); 
+		alert("Failed to load pokemon details.\nPlease try again."); 
 	});
-}
-
-
-function filterPokemonListByType() {
-
-	var selectedTypes = $("#pokemonTypeFilter").val()
-	console.log("selectedTypes=" + selectedTypes);
 }

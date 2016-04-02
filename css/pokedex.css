@@ -60,7 +60,7 @@ html, body {
 	text-align: center;
 	position: fixed; 
 	width: 300px;
-    margin-top: -205px;
+    /*margin-top: -205px;*/
     top: 50%;
 }
 
