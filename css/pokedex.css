@@ -52,16 +52,15 @@ html, body {
 	margin: 15px 0px;
 }
 
-#btnFilter {
-	font-weight: bold;
-}
-
 #pokemonDetailsWrapper {
 	text-align: center;
 	position: fixed; 
-	width: 300px;
-    /*margin-top: -205px;*/
-    top: 50%;
+}
+
+@media screen and (min-width: 675px) {
+	#pokemonDetailsWrapper {
+		width: 300px;
+	}
 }
 
 div#pokemonDetailsContainer .table {
@@ -76,9 +75,4 @@ div#pokemonDetailsContainer th, td {
 	display: none;
 	width:50%;
 	margin: auto;
-}
-
-#pokemonTypeFilterWrapper {
-	display: none;
-	padding: 10px 10px 10px 0;
 }
