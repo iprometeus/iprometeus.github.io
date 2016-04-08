@@ -1,78 +1,118 @@
-html, body {
+html,
+body {
     height: 100%;
+    width: 100%;
 }
-
+header {
+    width: 100%;
+    background-color: #62bec3;
+    margin-bottom: 20px;
+    padding: 10px 0px;
+}
+#txtHeader {
+    font-size: 36px;
+    font-weight: bold;
+    color: #ffffff;
+}
+.progress-bar {
+    background-color: #62bec3;
+}
 .pokemonListItem {
-	height: 230px;
-	text-align: center;
+    text-align: center;
+    cursor: pointer
 }
-
-.pokemonIconContainer {	
+.pokemonIconContainer {
     height: 120px;
 }
-
 .pokemonIconDetailsContainer {
-	height: 150px;
+    height: 150px;
 }
-
 .pokemonIcon {
-	position: relative;
+    position: relative;
     top: 50%;
     -webkit-transform: translateY(-50%);
     -ms-transform: translateY(-50%);
-	transform: translateY(-50%);
+    transform: translateY(-50%);
 }
-
-.pokemonName, .pokemonNameDetails {
-	font-weight: bold;
-}
-
+.pokemonName,
 .pokemonNameDetails {
-	font-size: 20px;
+    font-weight: bold;
 }
-
+.pokemonNameDetails {
+    font-size: 20px;
+}
 .pokemonTypeSection {
-	text-align: left;
-	padding-bottom: 5px;
+    text-align: left;
+    padding-bottom: 5px;
     padding-top: 5px;
 }
-
 .pokemonTypeLabel {
-	background-color: #0275d8;
-	color: #000000;
+    background-color: #0275d8;
+    color: #000000;
     font-weight: normal;
-	margin: 2px;
-	font-size: 100%;
+    margin: 2px;
+    font-size: 100%;
 }
-
 #btnLoadMore {
-	width: 100%;
-	font-weight: bold;
-	font-size: 20px;
-	margin: 15px 0px;
+    width: 100%;
+    background-color: #62bec3;
+    border-color: #63c1c6;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 20px;
+    margin: 15px 0px;
 }
-
+#btnLoadMore:active {
+    border-color: #63c1c6;
+}
 #pokemonDetailsWrapper {
-	text-align: center;
-	position: fixed; 
+    text-align: center;
+    position: fixed;
 }
-
-@media screen and (min-width: 675px) {
-	#pokemonDetailsWrapper {
-		width: 300px;
-	}
-}
-
 div#pokemonDetailsContainer .table {
-	margin-bottom: 0;
+    margin-bottom: 0;
 }
-
-div#pokemonDetailsContainer th, td {
-	text-align: center;
+div#pokemonDetailsContainer th,
+td {
+    text-align: center;
 }
-
 #pokemonListProgress {
-	display: none;
-	width:50%;
-	margin: auto;
+    display: none;
+    width: 50%;
+    margin: auto;
+}
+.scrollup {
+    position: fixed;
+    padding: 20px 7px;
+    border-radius: 5px;
+    background-color: #62bec3;
+    font-weight: bold;
+    color: #ffffff;
+    bottom: 50px;
+    right: 50px;
+    display: none;
+    cursor: pointer;
+}
+@media screen and (min-width: 675px) {
+    #pokemonDetailsWrapper {
+        width: 300px;
+    }
+}
+@media screen and (min-height: 665px) {
+    .pokemonListItem {
+        height: 230px;
+    }
+}
+@media screen and (max-height: 665px),
+(min-device-width: 375px) and (max-device-width: 667px) {
+    #pokemonDetailsWrapper .table>tbody>tr>td,
+    .table>tbody>tr>th {
+        padding: 0px 8px;
+    }
+    .panel-body {
+        padding: 5px;
+    }
+    .pokemonIconDetailsContainer {
+        height: 90px;
+    }
 }
